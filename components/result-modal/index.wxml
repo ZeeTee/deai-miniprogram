@@ -1,0 +1,77 @@
+<!-- 结果弹窗：底部弹出，结果可复制 -->
+<view wx:if="{{show}}" class="mask" bindtap="onClose" catchtouchmove="noop">
+  <view class="sheet" catchtap="noop">
+
+    <!-- 头部 -->
+    <view class="sheet-head">
+      <view class="grow">
+        <view class="sheet-title">{{record.title || '改写结果'}}</view>
+        <view wx:if="{{record.meta}}" class="sheet-meta">{{record.meta}}</view>
+      </view>
+      <view class="close" bindtap="onClose">✕</view>
+    </view>
+
+    <!-- 兜底 / 失败提示：规则版结果仍然可用，所以不是错误弹窗 -->
+    <view wx:if="{{record.error}}" class="banner banner-warn">
+      <text class="banner-title">AI 这次没写成</text>
+      <text class="banner-text">{{record.error}}</text>
+      <text wx:if="{{record.isFallback}}" class="banner-text">下面是规则版结果，可以直接用，也可以再试一次。</text>
+    </view>
+
+    <!-- 结果正文 -->
+    <scroll-view class="sheet-body" scroll-y>
+      <!-- 用 <text user-select> 而不是 <view>：只有 text 节点支持长按选中 -->
+      <view wx:if="{{record.result}}" class="result-text">
+        <text class="result-inner" user-select="{{true}}">{{record.result}}</text>
+      </view>
+      <view wx:else class="result-empty">这次没有产出内容</view>
+
+      <!-- 体检报告（可折叠，默认收起，不抢结果的位置） -->
+      <view wx:if="{{record.report}}" class="report">
+        <view class="report-head" bindtap="toggleReport">
+          <view class="grow row">
+            <text class="report-score" style="color:{{record.report.scoreColor}}">{{record.report.score}}</text>
+            <text class="report-unit">分</text>
+            <text class="chip {{record.report.levelChip}} report-chip">AI 味{{record.report.levelText}}</text>
+          </view>
+          <text class="report-toggle">{{showReport ? '收起' : '详情'}}</text>
+        </view>
+
+        <view class="report-verdict">{{record.report.verdict}}</view>
+
+        <view wx:if="{{showReport}}" class="report-detail">
+          <view wx:if="{{record.report.hasHits}}" class="hit-list">
+            <view wx:for="{{record.report.hits}}" wx:key="key" class="hit">
+              <view class="row">
+                <text class="hit-text">「{{item.text}}」</text>
+                <text class="chip {{item.chip}} hit-chip">{{item.severityText}}</text>
+              </view>
+              <view wx:if="{{item.reason}}" class="hit-reason">{{item.reason}}</view>
+              <view wx:if="{{item.hasSuggestion}}" class="hit-suggestion">建议：{{item.suggestion}}</view>
+            </view>
+            <view wx:if="{{record.report.hitCount > record.report.hits.length}}" class="hit-more">
+              还有 {{record.report.hitCount - record.report.hits.length}} 处未列出
+            </view>
+          </view>
+          <view wx:else class="subtle">没有检出明显的 AI 痕迹</view>
+        </view>
+      </view>
+
+      <!-- 用量：给在意成本的人看，普通用户不看也不影响 -->
+      <view wx:if="{{record.usage}}" class="usage">
+        <text>{{record.usage.totalTokens}} tokens</text>
+        <text wx:if="{{record.usage.cacheHitText}}"> · 缓存命中 {{record.usage.cacheHitText}}</text>
+        <text wx:if="{{record.usage.costText}}"> · {{record.usage.costText}}</text>
+      </view>
+
+      <view class="sheet-bottom-space"></view>
+    </scroll-view>
+
+    <!-- 底部动作 -->
+    <view class="sheet-foot">
+      <view class="btn btn-primary grow" bindtap="onCopy" data-which="result">复制结果</view>
+      <view class="btn btn-ghost btn-side" bindtap="onCopy" data-which="source">复制原文</view>
+    </view>
+
+  </view>
+</view>

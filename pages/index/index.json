@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "result-modal": "/components/result-modal/index"
+  },
+  "navigationBarTitleText": "去 AI 味",
+  "enablePullDownRefresh": false
+}

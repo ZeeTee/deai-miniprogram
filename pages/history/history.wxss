@@ -1,0 +1,64 @@
+/* 历史记录 */
+
+.head {
+  padding: 4rpx 8rpx 20rpx;
+}
+
+.item {
+  padding: 24rpx 28rpx;
+}
+
+.item-hover {
+  background: #fafcfb;
+}
+
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-score {
+  font-size: 36rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.item-unit {
+  font-size: 22rpx;
+  color: #8a9490;
+  margin: 0 12rpx 0 2rpx;
+}
+
+.item-chip {
+  margin-top: 4rpx;
+}
+
+.item-time {
+  font-size: 24rpx;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+
+.item-summary {
+  margin-top: 14rpx;
+  font-size: 29rpx;
+  color: #1f2a26;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.item-foot {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+}
+
+.list-hint {
+  margin-top: 32rpx;
+  text-align: center;
+  font-size: 24rpx;
+}

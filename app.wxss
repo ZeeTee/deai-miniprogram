@@ -1,0 +1,160 @@
+/**
+ * app.wxss —— 全局样式
+ *
+ * 只放跨页面复用的东西：页面底色、卡片、主/次按钮、标签。
+ * 页面自己的排版写在各自页面的 wxss 里，不要往这里堆。
+ */
+
+page {
+  background: #f4f6f5;
+  color: #1f2a26;
+  font-size: 30rpx;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 布局 ---------- */
+
+.page-body {
+  padding: 24rpx 24rpx 48rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  box-shadow: 0 2rpx 16rpx rgba(20, 69, 61, 0.06);
+}
+
+.card + .card {
+  margin-top: 24rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- 文字 ---------- */
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #14453d;
+}
+
+.subtle {
+  color: #7b8783;
+  font-size: 26rpx;
+}
+
+.mono-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 按钮 ---------- */
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.btn-primary {
+  background: #14453d;
+  color: #fff;
+}
+
+.btn-primary.btn-disabled {
+  background: #b9c6c1;
+  color: #f2f5f4;
+}
+
+.btn-ghost {
+  background: #eef2f0;
+  color: #14453d;
+  font-weight: 500;
+}
+
+.btn:active {
+  opacity: 0.82;
+}
+
+/* 小号文字按钮，用在卡片右上角这类地方 */
+.link-btn {
+  font-size: 26rpx;
+  color: #14453d;
+  padding: 8rpx 12rpx;
+}
+
+.link-btn-danger {
+  color: #c6483f;
+}
+
+/* ---------- 标签 ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 40rpx;
+  padding: 0 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.chip-low {
+  background: #e6f4ef;
+  color: #2e8b6e;
+}
+
+.chip-medium {
+  background: #fdf1e2;
+  color: #c77e22;
+}
+
+.chip-high {
+  background: #fdeceb;
+  color: #c6483f;
+}
+
+.chip-neutral {
+  background: #eef2f0;
+  color: #5c6b66;
+}
+
+/* ---------- 空态 ---------- */
+
+.empty {
+  padding: 140rpx 40rpx;
+  text-align: center;
+  color: #9aa5a1;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  margin-bottom: 12rpx;
+  color: #6b7873;
+}

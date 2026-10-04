@@ -1,0 +1,48 @@
+<!-- 历史记录 -->
+<view class="page-body">
+
+  <view wx:if="{{total}}" class="row-between head">
+    <text class="subtle">共 {{total}} 条 · 只存在本机</text>
+    <view class="link-btn link-btn-danger" bindtap="onClearAll">清空</view>
+  </view>
+
+  <view wx:if="{{!total}}" class="empty">
+    <view class="empty-title">还没有记录</view>
+    <view class="subtle">去「去 AI 味」页改一段文字，结果会自动存到这里</view>
+  </view>
+
+  <block wx:else>
+    <view
+      wx:for="{{list}}"
+      wx:key="id"
+      class="card item"
+      data-id="{{item.id}}"
+      bindtap="onTapItem"
+      bindlongpress="onLongPressItem"
+      hover-class="item-hover"
+    >
+      <view class="item-head">
+        <view class="grow row">
+          <text class="item-score" style="color:{{item.scoreColor}}">{{item.score}}</text>
+          <text class="item-unit">分</text>
+          <text class="chip {{item.levelChip}} item-chip">AI 味{{item.levelText}}</text>
+          <text wx:if="{{item.isFallback}}" class="chip chip-neutral item-chip">规则版</text>
+        </view>
+        <text class="subtle item-time">{{item.timeText}}</text>
+      </view>
+
+      <view class="item-summary">{{item.summary}}</view>
+
+      <view class="item-foot subtle">
+        <text>{{item.sceneText}}</text>
+        <text wx:if="{{item.charCount}}"> · {{item.charCount}} 字</text>
+        <text wx:if="{{item.totalHits}}"> · {{item.totalHits}} 处命中</text>
+      </view>
+    </view>
+
+    <view class="list-hint subtle">长按可删除单条</view>
+  </block>
+</view>
+
+<!-- 结果弹窗（和历史页共用同一个组件） -->
+<result-modal show="{{showModal}}" record="{{modalRecord}}" bind:close="onModalClose" />

@@ -1,0 +1,108 @@
+<!-- 首页：输入 → 去 AI 味 → 结果弹窗 -->
+<view class="page-body">
+
+  <!-- 配置没改完时，只显示这一张卡：否则用户点了按钮只会收到一个看不懂的报错 -->
+  <view wx:if="{{!configOk}}" class="card setup">
+    <view class="setup-title">还差一步就能用了</view>
+    <view class="setup-text">{{configHint}}</view>
+    <view class="setup-file">miniprogram/config.js</view>
+    <view class="setup-text">把 CLOUD_ENV 和 SERVICE_NAME 两项填上，重新编译即可。</view>
+  </view>
+
+  <block wx:else>
+
+    <!-- 输入 -->
+    <view class="card">
+      <view class="row-between">
+        <text class="title">粘贴要改的文字</text>
+        <text class="counter {{nearLimit ? 'counter-max' : ''}}">{{charCount}} / {{maxChars}}</text>
+      </view>
+
+      <textarea
+        class="editor"
+        value="{{text}}"
+        bindinput="onInput"
+        maxlength="{{maxChars}}"
+        placeholder="把 AI 写的文案粘进来，点下面的按钮去掉机器味"
+        placeholder-class="editor-ph"
+        show-confirm-bar="{{false}}"
+        cursor-spacing="30"
+        adjust-position="{{true}}"
+      />
+
+      <!-- 输入框自带长按复制/粘贴，这里再给三个显式按钮，省得用户去猜 -->
+      <view class="editor-actions">
+        <view class="link-btn" bindtap="onPaste">粘贴</view>
+        <view class="link-btn" bindtap="onCopyInput">复制</view>
+        <view class="link-btn link-btn-danger" bindtap="onClear">清空</view>
+      </view>
+    </view>
+
+    <!-- 改写参数：选项和中文名都来自后端 /api/skills，前端不写死。
+         拉不到选项时整张卡隐藏，用默认参数照样能改。 -->
+    <view wx:if="{{sceneOptions.length || intensityOptions.length}}" class="card params">
+      <view wx:if="{{sceneOptions.length}}" class="param-row">
+        <text class="param-label">场景</text>
+        <view class="segs">
+          <view
+            wx:for="{{sceneOptions}}"
+            wx:key="key"
+            class="seg {{item.active ? 'seg-active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="onSelectScene"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{intensityOptions.length}}" class="param-row">
+        <text class="param-label">强度</text>
+        <view class="segs">
+          <view
+            wx:for="{{intensityOptions}}"
+            wx:key="key"
+            class="seg {{item.active ? 'seg-active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="onSelectIntensity"
+          >{{item.label}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提交 -->
+    <view
+      class="btn btn-primary submit {{(loading || !charCount) ? 'btn-disabled' : ''}}"
+      bindtap="onSubmit"
+      hover-class="none"
+    >
+      <text wx:if="{{loading}}" class="submit-loading">
+        <text class="dot">●</text>{{statusText || '处理中…'}}
+      </text>
+      <text wx:else>开始去 AI 味</text>
+    </view>
+
+    <!-- 额度 -->
+    <view class="quota">
+      <text wx:if="{{quota}}">今日还剩 {{quota.remaining}} / {{quota.limit}} 次</text>
+      <text wx:else class="subtle">额度查询中…</text>
+      <text wx:if="{{quota && quota.verified && quota.phoneMasked}}" class="quota-auth">已授权 {{quota.phoneMasked}}</text>
+    </view>
+
+    <!-- 额度提升入口：只有后端确认「手机号授权就绪」时才显示，
+         免得小程序主体不满足资质时给用户一个点了就报错的按钮 -->
+    <button
+      wx:if="{{phoneAuthReady && quota && !quota.verified}}"
+      class="auth-btn"
+      open-type="getPhoneNumber"
+      bindgetphonenumber="onPhoneAuth"
+      hover-class="none"
+    >
+      授权手机号，每天可用 {{quota.verifiedLimit}} 次
+    </button>
+
+    <view class="foot-hint">只做措辞改写，不新增事实。改写结果建议自己再读一遍。</view>
+
+  </block>
+</view>
+
+<!-- 结果弹窗 -->
+<result-modal show="{{showModal}}" record="{{modalRecord}}" bind:close="onModalClose" />

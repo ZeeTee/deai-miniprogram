@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/history/history"
+  ],
+  "window": {
+    "navigationBarTitleText": "去 AI 味",
+    "navigationBarBackgroundColor": "#14453D",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F4F6F5",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8A9490",
+    "selectedColor": "#14453D",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "去 AI 味"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "历史记录"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

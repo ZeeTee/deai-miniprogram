@@ -1,0 +1,289 @@
+/* 结果弹窗 */
+
+/* ⚠️ 自定义组件默认样式隔离：app.wxss 里的 class 选择器传不进来，
+   所以下面这些通用类必须在组件内自带一份，不能指望 app.wxss。 */
+
+.mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(16, 26, 23, 0.45);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 86vh;
+  background: #fff;
+  border-radius: 28rpx 28rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  /* 组件内没有 page 选择器兜底，基础字号要自己写 */
+  font-size: 30rpx;
+  line-height: 1.6;
+  color: #1f2a26;
+}
+
+/* ---------- 通用类（app.wxss 的同步副本） ---------- */
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.subtle {
+  color: #7b8783;
+  font-size: 26rpx;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 40rpx;
+  padding: 0 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  line-height: 1;
+}
+
+.chip-low {
+  background: #e6f4ef;
+  color: #2e8b6e;
+}
+
+.chip-medium {
+  background: #fdf1e2;
+  color: #c77e22;
+}
+
+.chip-high {
+  background: #fdeceb;
+  color: #c6483f;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 16rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #14453d;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: #eef2f0;
+  color: #14453d;
+  font-weight: 500;
+}
+
+.btn:active {
+  opacity: 0.82;
+}
+
+/* ---------- 头部 ---------- */
+
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  padding: 30rpx 30rpx 18rpx;
+  border-bottom: 1rpx solid #eef2f0;
+}
+
+.sheet-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #14453d;
+}
+
+.sheet-meta {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #8a9490;
+}
+
+.close {
+  width: 56rpx;
+  height: 56rpx;
+  margin: -8rpx -8rpx 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a9490;
+  font-size: 32rpx;
+}
+
+/* ---------- 提示条 ---------- */
+
+.banner {
+  margin: 20rpx 30rpx 0;
+  padding: 20rpx 24rpx;
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.banner-warn {
+  background: #fdf1e2;
+}
+
+.banner-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #c77e22;
+  margin-bottom: 6rpx;
+}
+
+.banner-text {
+  font-size: 25rpx;
+  color: #8a6a33;
+  line-height: 1.5;
+}
+
+/* ---------- 正文 ---------- */
+
+.sheet-body {
+  flex: 1;
+  max-height: 62vh;
+  padding: 24rpx 30rpx 0;
+  box-sizing: border-box;
+}
+
+.result-text {
+  font-size: 31rpx;
+  line-height: 1.75;
+  color: #1f2a26;
+  word-break: break-word;
+}
+
+.result-inner {
+  white-space: pre-wrap;
+}
+
+.result-empty {
+  padding: 60rpx 0;
+  text-align: center;
+  color: #9aa5a1;
+}
+
+.sheet-bottom-space {
+  height: 20rpx;
+}
+
+/* ---------- 体检报告 ---------- */
+
+.report {
+  margin-top: 28rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #eef2f0;
+}
+
+.report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-score {
+  font-size: 44rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-unit {
+  font-size: 24rpx;
+  color: #8a9490;
+  margin: 0 12rpx 0 4rpx;
+}
+
+.report-chip {
+  margin-top: 6rpx;
+}
+
+.report-toggle {
+  font-size: 26rpx;
+  color: #14453d;
+}
+
+.report-verdict {
+  margin-top: 10rpx;
+  font-size: 27rpx;
+  color: #5c6b66;
+}
+
+.report-detail {
+  margin-top: 20rpx;
+}
+
+.hit {
+  padding: 18rpx 0;
+  border-top: 1rpx solid #f4f6f5;
+}
+
+.hit-text {
+  font-size: 27rpx;
+  color: #1f2a26;
+  flex: 1;
+  min-width: 0;
+}
+
+.hit-chip {
+  margin-left: 12rpx;
+  flex-shrink: 0;
+}
+
+.hit-reason {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #8a9490;
+}
+
+.hit-suggestion {
+  margin-top: 4rpx;
+  font-size: 24rpx;
+  color: #2e8b6e;
+}
+
+.hit-more {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #9aa5a1;
+}
+
+/* ---------- 用量 ---------- */
+
+.usage {
+  margin-top: 24rpx;
+  font-size: 23rpx;
+  color: #a8b2ae;
+}
+
+/* ---------- 底部 ---------- */
+
+.sheet-foot {
+  display: flex;
+  padding: 20rpx 30rpx 24rpx;
+  border-top: 1rpx solid #eef2f0;
+  background: #fff;
+}
+
+.btn-side {
+  width: 200rpx;
+  margin-left: 20rpx;
+  font-size: 28rpx;
+}

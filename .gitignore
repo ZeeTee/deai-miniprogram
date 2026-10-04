@@ -1,0 +1,8 @@
+# 开发者工具的本地私有配置（含个人偏好，不要提交）
+project.private.config.json
+
+# 用 npm 构建时才需要，本项目零依赖
+node_modules/
+miniprogram_npm/
+
+.DS_Store
