@@ -2,12 +2,17 @@
 /**
  * scripts/selfcheck.js —— 纯逻辑自检（不需要微信开发者工具，普通 node 就能跑）
  *
- *     cd miniprogram && node scripts/selfcheck.js
+ *     cd deai-miniprogram && node scripts/selfcheck.js
  *
  * 为什么需要它：小程序代码没法在命令行里跑单测（Page/Component/wx 都是运行时的东西）。
  * 但真正容易出错的部分其实都是纯逻辑——字数统计、本地存储的增删改查与淘汰、
  * 选项构造、以及「请求报文和错误信封」的解析。这些都能用假的 wx 全局跑起来，
- * 所以本脚本桩掉 wx.*，把 utils/ 全部验一遍。
+ * 所以本脚本桩掉 wx.*，把 miniprogram/utils/ 全部验一遍。
+ *
+ * ⚠️ 这个文件是 **Node 脚本**，不是小程序代码：它用 require('path')、process.exit、
+ * async/await，这些在小程序运行时都不存在。所以它必须待在 miniprogramRoot
+ * **之外**（本项目的 miniprogramRoot 是 miniprogram/），
+ * 并且已在 project.config.json 的 packOptions.ignore 里排除，不会被上传。
  *
  * 它不会碰 config.js 里的真实配置（只在内存里改），也不会发任何网络请求。
  */
@@ -41,7 +46,7 @@ global.wx = {
   },
 }
 
-const dir = path.join(__dirname, '..')
+const dir = path.join(__dirname, '..', 'miniprogram')
 const store = require(path.join(dir, 'utils/store.js'))
 const format = require(path.join(dir, 'utils/format.js'))
 const config = require(path.join(dir, 'config.js'))

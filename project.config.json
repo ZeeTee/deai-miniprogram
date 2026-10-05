@@ -1,10 +1,10 @@
 {
   "description": "去 AI 味 · 小程序前端",
-  "miniprogramRoot": "./",
+  "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
   "appid": "REPLACE_ME_APPID",
   "projectname": "deai-miniprogram",
-  "libVersion": "2.23.0",
+  "libVersion": "latest",
   "setting": {
     "urlCheck": false,
     "es6": true,
@@ -12,6 +12,14 @@
     "postcss": true,
     "minified": true,
     "ignoreUploadUnusedFiles": true
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "scripts"
+      }
+    ]
   },
   "condition": {}
 }

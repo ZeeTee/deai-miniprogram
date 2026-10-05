@@ -6,7 +6,14 @@
 
 ## 三步跑起来
 
-### 1. 改 `config.js`
+### 1. 用开发者工具导入**仓库根目录**（不是 `miniprogram/`）
+
+`project.config.json` 在仓库根目录，里面写着 `"miniprogramRoot": "miniprogram/"`，
+所以导入时选这个仓库的根目录即可，开发者工具会自己去 `miniprogram/` 找 `app.json`。
+
+### 2. 改两处配置
+
+**`miniprogram/config.js`**（这是唯一需要改的代码文件）：
 
 ```js
 CLOUD_ENV: 'prod-xxxx',    // 云托管「环境ID」（不是环境名）
@@ -18,9 +25,7 @@ SERVICE_NAME: 'deai-api',  // 云托管服务名
 
 没改这两项的话，首页会直接显示一张「还差一步就能用了」的提示卡，不会甩一个看不懂的报错。
 
-### 2. 改 `project.config.json` 里的 `appid`
-
-换成你自己的小程序 AppID，然后把这个目录作为项目根目录导入微信开发者工具。
+**`project.config.json`** 里的 `appid`：换成你自己的小程序 AppID。
 
 ### 3. 确认基础库版本
 
@@ -33,16 +38,22 @@ SERVICE_NAME: 'deai-api',  // 云托管服务名
 ## 目录结构
 
 ```
-app.js / app.json / app.wxss   小程序入口、两个 tab、全局样式
-config.js                      ★ 唯一需要改的文件
-utils/api.js                   云托管调用层（唯一出口，页面不直接碰 wx.cloud）
-utils/store.js                 本地历史记录（索引 + 明细分离）+ 参数偏好
-utils/format.js                纯函数：字数、时间、报告加工、选项构造
-components/result-modal/       结果弹窗（首页和历史页共用）
-pages/index/                   输入 → 去 AI 味
-pages/history/                 历史记录
-scripts/selfcheck.js           纯逻辑自检（node 直接跑，不需要开发者工具）
+project.config.json            开发者工具的项目配置（miniprogramRoot 指向下面）
+miniprogram/                   ← 小程序根目录（只有这里面的东西会被编译/上传）
+  app.js / app.json / app.wxss 小程序入口、两个 tab、全局样式
+  config.js                    ★ 唯一需要改的文件
+  utils/api.js                 云托管调用层（唯一出口，页面不直接碰 wx.cloud）
+  utils/store.js               本地历史记录（索引 + 明细分离）+ 参数偏好
+  utils/format.js              纯函数：字数、时间、报告加工、选项构造
+  components/result-modal/     结果弹窗（首页和历史页共用）
+  pages/index/                 输入 → 去 AI 味
+  pages/history/               历史记录
+scripts/selfcheck.js           Node 自检脚本（在小程序根目录之外，不会被编译）
 ```
+
+> ⚠️ `scripts/selfcheck.js` 是 **Node 脚本**（用 `require('path')`、`process.exit`、
+> `async/await`），这些在小程序运行时都不存在。它必须待在 `miniprogram/` **外面**——
+> 放在里面会被开发者工具当成小程序代码去编译，属于必错的写法。
 
 ## 自检
 
@@ -50,7 +61,7 @@ scripts/selfcheck.js           纯逻辑自检（node 直接跑，不需要开�
 但容易出错的部分其实都是纯逻辑。所以把 `wx.*` 桩掉，用普通 node 验一遍：
 
 ```bash
-cd miniprogram && node scripts/selfcheck.js
+node scripts/selfcheck.js
 ```
 
 覆盖：字数统计、历史记录增删改查与 50 条淘汰、弹窗记录归一化（含 AI 失败时的规则版兜底）、
