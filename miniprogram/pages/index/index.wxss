@@ -146,27 +146,9 @@
   color: #7b8783;
 }
 
-.quota-auth {
+.quota-reset {
   margin-left: 12rpx;
-  color: #2e8b6e;
-}
-
-/* 用 button 是因为只有 button 才支持 open-type="getPhoneNumber"，
-   所以要把它自带的默认样式清掉 */
-.auth-btn {
-  margin-top: 20rpx;
-  height: 84rpx;
-  line-height: 84rpx;
-  padding: 0;
-  background: #e6f4ef;
-  color: #2e8b6e;
-  font-size: 28rpx;
-  font-weight: 500;
-  border-radius: 16rpx;
-}
-
-.auth-btn::after {
-  border: none;
+  color: #c77e22;
 }
 
 .foot-hint {

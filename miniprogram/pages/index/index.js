@@ -26,10 +26,10 @@ Page({
     // 部署自检
     configOk: true,
     configHint: '',
-    phoneAuthReady: false,
 
-    // 额度
+    // 使用次数（按 openid 每天固定 N 次）
     quota: null,
+    resetText: '',   // 次数用完时显示的「明天 0 点恢复」
 
     // 改写参数。默认值先兜底，onLoad 后从 /api/skills 拉真实选项。
     skill: config.DEFAULT_SKILL,
@@ -56,7 +56,6 @@ Page({
     })
     if (!api.isConfigured()) return
 
-    this.loadHealth()
     this.loadDefaults()
   },
 
@@ -72,20 +71,6 @@ Page({
   },
 
   /* ------------------------------ 数据加载 ------------------------------ */
-
-  /** 部署自检：手机号授权是否就绪（决定要不要显示授权入口） */
-  loadHealth() {
-    const that = this
-    api
-      .health()
-      .then(function (d) {
-        that.setData({ phoneAuthReady: !!d.phoneAuthReady })
-      })
-      .catch(function (err) {
-        // 探活失败不打扰用户，首次真正提交时会给出明确报错
-        console.warn('[index] health 失败：', err)
-      })
-  },
 
   /**
    * 改写参数从后端拉，前端不写死。
@@ -155,7 +140,7 @@ Page({
     api
       .getQuota()
       .then(function (d) {
-        that.setData({ quota: d })
+        that.applyQuota(d)
       })
       .catch(function (err) {
         console.warn('[index] quota 失败：', err)
@@ -342,8 +327,16 @@ Page({
 
   /* ------------------------------ 结果落地 ------------------------------ */
 
+  /** 统一在这里落地次数信息，顺带算出「明天 0 点恢复」的提示。 */
   applyQuota(quota) {
-    if (quota && typeof quota === 'object') this.setData({ quota: quota })
+    if (!quota || typeof quota !== 'object') return
+    this.setData({
+      quota: quota,
+      // 后端 resetsAt 是北京时间下一个 0 点。这里不解析它——客户端的时区
+      // 未必是 +08:00，本地 new Date() 解析出来可能差几小时；而且次数
+      // 按天分桶，语义上永远是「明天 0 点」，写死反而不会错。
+      resetText: quota.resetsAt ? '明天 0 点恢复' : '',
+    })
   },
 
   /** 有结果了：存历史 + 弹窗 */
@@ -392,45 +385,5 @@ Page({
 
   alertError(err) {
     this.alert('没能改写', api.describeError(err))
-  },
-
-  /* ------------------------------ 手机号授权（额度 5 → 10）------------------------------ */
-
-  /**
-   * open-type="getPhoneNumber" 的回调。
-   *
-   * e.detail.code 是微信下发的一次性凭证（5 分钟有效、只能消费一次），
-   * 与 wx.login 的 code 不能混用，所以传的是 phoneCode。
-   * errno 1400001 = 小程序手机号资源包额度不足，此时不会有 code。
-   */
-  onPhoneAuth(e) {
-    const detail = (e && e.detail) || {}
-
-    if (detail.errno === 1400001) {
-      wx.showToast({ title: '授权服务额度不足，请稍后再试', icon: 'none' })
-      return
-    }
-    if (!detail.code) {
-      wx.showToast({ title: '已取消授权', icon: 'none' })
-      return
-    }
-
-    const that = this
-    wx.showLoading({ title: '授权中…', mask: true })
-    api
-      .login(detail.code)
-      .then(function (d) {
-        wx.hideLoading()
-        that.applyQuota(d.quota)
-        const limit = d.quota && d.quota.limit ? d.quota.limit : ''
-        wx.showToast({
-          title: limit ? '已提升到每天 ' + limit + ' 次' : '授权成功',
-          icon: 'none',
-        })
-      })
-      .catch(function (err) {
-        wx.hideLoading()
-        that.alert('授权失败', api.describeError(err))
-      })
   },
 })

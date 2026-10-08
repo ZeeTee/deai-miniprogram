@@ -80,24 +80,13 @@
       <text wx:else>开始去 AI 味</text>
     </view>
 
-    <!-- 额度 -->
+    <!-- 次数：按 openid 每天固定 N 次，不用登录、没有档位。
+         用完之后把「什么时候恢复」也说出来，省得用户以为要等到明天同一时刻。 -->
     <view class="quota">
       <text wx:if="{{quota}}">今日还剩 {{quota.remaining}} / {{quota.limit}} 次</text>
-      <text wx:else class="subtle">额度查询中…</text>
-      <text wx:if="{{quota && quota.verified && quota.phoneMasked}}" class="quota-auth">已授权 {{quota.phoneMasked}}</text>
+      <text wx:else class="subtle">次数查询中…</text>
+      <text wx:if="{{quota && !quota.remaining && quota.resetsAt}}" class="quota-reset">{{resetText}}</text>
     </view>
-
-    <!-- 额度提升入口：只有后端确认「手机号授权就绪」时才显示，
-         免得小程序主体不满足资质时给用户一个点了就报错的按钮 -->
-    <button
-      wx:if="{{phoneAuthReady && quota && !quota.verified}}"
-      class="auth-btn"
-      open-type="getPhoneNumber"
-      bindgetphonenumber="onPhoneAuth"
-      hover-class="none"
-    >
-      授权手机号，每天可用 {{quota.verifiedLimit}} 次
-    </button>
 
     <view class="foot-hint">只做措辞改写，不新增事实。改写结果建议自己再读一遍。</view>
 

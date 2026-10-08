@@ -249,7 +249,12 @@ function request(options) {
  * 业务接口（严格按后端契约，不要臆造字段）
  * ------------------------------------------------------------------ */
 
-/** GET /api/health —— 探活 + 部署自检（手机号授权是否就绪等） */
+/**
+ * GET /api/health —— 探活 + 部署自检。
+ *
+ * 当前界面没用到（排查部署问题时用浏览器或 curl 打更方便）。
+ * 保留封装是为了以后要做「关于」页/启动自检时能直接用。
+ */
 function health() {
   return request({ path: '/api/health', method: 'GET', timeout: TIMEOUT_MAX })
 }
@@ -299,7 +304,11 @@ function getTask(taskId) {
 }
 
 /**
- * POST /api/auth/login —— 手机号授权，把额度从匿名档提到已授权档
+ * POST /api/auth/login —— 手机号授权。
+ *
+ * ⚠️ **它不再影响使用次数**（次数已统一成「按 openid 每天 N 次」），
+ * 当前界面也没有入口——手机号能力按次收费、还有主体资质门槛，
+ * 没有实际收益就不该让用户点。保留封装是为了以后做账号体系时能直接接回来。
  *
  * phoneCode 必须来自 open-type="getPhoneNumber" 的回调 e.detail.code，
  * **不能**传 wx.login 的 code（两者作用不同，官方明确不能混用）。
