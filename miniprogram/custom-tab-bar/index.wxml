@@ -1,0 +1,17 @@
+<!-- 自定义 tabBar：只有两个纯文字 tab，所以不需要图标。
+     选中的胶囊是一个会滑动的独立元素，动画写在 wxss 里 -->
+<view class="tab-bar">
+  <view class="tab-inner">
+    <view class="tab-pill {{selected === 1 ? 'tab-pill-right' : ''}}"></view>
+
+    <view
+      wx:for="{{list}}"
+      wx:key="pagePath"
+      class="tab-item"
+      data-index="{{index}}"
+      bindtap="onTap"
+    >
+      <text class="tab-label {{selected === index ? 'tab-label-on' : ''}}">{{item.text}}</text>
+    </view>
+  </view>
+</view>

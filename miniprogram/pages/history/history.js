@@ -19,6 +19,10 @@ Page({
   },
 
   onShow() {
+    // 自定义 tabBar 不会自己知道当前在哪一页，得手动同步选中态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 1 })
+    }
     this.reload()
   },
 
@@ -34,6 +38,8 @@ Page({
       return {
         id: it.id,
         summary: it.summary || '(空)',
+        // 结果摘要：老记录（加这个字段之前存的）没有，模板里会让它显示一句占位文案
+        resultSummary: it.resultSummary || '',
         timeText: format.formatTime(it.createdAt),
         sceneText: format.sceneText(it.scene),
         charCount: it.charCount,

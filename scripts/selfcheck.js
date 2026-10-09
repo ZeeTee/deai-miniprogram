@@ -115,11 +115,15 @@ async function main() {
     level: 'high',
     totalHits: 3,
     charCount: 20,
-    usage: { totalTokens: 15310, cacheHitRate: 0.9579, costCNY: 0.002482 },
   })
   check('返回带 id / createdAt', rec.id === 'task1' && !!rec.createdAt)
   check('索引 1 条', store.getHistoryIndex().length === 1)
   check('明细可读回', store.getHistoryItem('task1').llmText === 'AI 版')
+  check(
+    '索引带结果摘要（优先 AI 版）',
+    store.getHistoryIndex()[0].resultSummary === 'AI 版',
+    store.getHistoryIndex()[0].resultSummary,
+  )
 
   /* ---------------- 弹窗记录 ---------------- */
   section('弹窗记录（toModalRecord）')
@@ -129,8 +133,6 @@ async function main() {
   check('result 取 AI 版', modal.result === 'AI 版')
   check('source 是原文', modal.source.indexOf('首先') === 0)
   check('report 已加工（等级→色块）', modal.report.score === 82 && modal.report.levelChip === 'chip-high')
-  check('usage 缓存命中率转百分比', modal.usage.cacheHitText === '96%', modal.usage.cacheHitText)
-  check('usage 小额费用保留 4 位', modal.usage.costText === '¥0.0025', modal.usage.costText)
   check('meta 含场景与强度', modal.meta.indexOf('通用') === 0 && modal.meta.indexOf('中度') !== -1, modal.meta)
 
   section('弹窗记录：AI 失败时的规则版兜底')
@@ -146,8 +148,13 @@ async function main() {
   check('title 变「规则版结果」', m2.title === '规则版结果', m2.title)
   check('isFallback=true', m2.isFallback === true)
   check('error 带出去', m2.error === 'AI 这次没写好')
-  check('report / usage 为 null', m2.report === null && m2.usage === null)
+  check('report 为 null', m2.report === null)
   check('列表里标记 hasLlm=false', store.getHistoryIndex()[0].hasLlm === false)
+  check(
+    '只有规则版时结果摘要退回规则版',
+    store.getHistoryIndex()[0].resultSummary === '规则版兜底',
+    store.getHistoryIndex()[0].resultSummary,
+  )
 
   section('历史记录：更新与删除')
   store.updateHistory('task2', { llmText: '补上的 AI 版' })
@@ -279,6 +286,55 @@ async function main() {
   check('quota', calls[1].path === '/api/quota')
   check('skills', calls[2].path === '/api/skills')
   check('login 字段是 phoneCode', calls[3].path === '/api/auth/login' && calls[3].data.phoneCode === 'phone-code')
+
+  section('评价（/api/feedback）')
+  calls.length = 0
+  plan = [ok({ availableReasons: ['not_natural', 'added_facts', 'weird_new_reason'] })]
+  const fbSummary = await api.getFeedbackSummary()
+  check('summary 路径与 GET', calls[0].path === '/api/feedback/summary' && calls[0].method === 'GET')
+  check('availableReasons 原样带出', fbSummary.availableReasons.length === 3, fbSummary.availableReasons)
+  const reasonOpts = format.buildReasonOptions(fbSummary.availableReasons, 'added_facts')
+  check('原因 key → 中文名', reasonOpts[0].label === '还是很像 AI', reasonOpts[0].label)
+  check('只有选中项 active', reasonOpts.filter((o) => o.active).length === 1 && reasonOpts[1].active)
+  check('后端新增的原因显示原始 key', reasonOpts[2].label === 'weird_new_reason', reasonOpts[2].label)
+
+  plan = [ok({ accepted: true, created: true, rating: 'bad' })]
+  const fb1 = await api.sendFeedback({
+    taskId: 'task1',
+    rating: 'bad',
+    reason: 'not_natural',
+    comment: '太长了',
+  })
+  check('提交到 /api/feedback（POST）', calls[1].path === '/api/feedback' && calls[1].method === 'POST')
+  check(
+    'taskId / rating / reason / comment 都带上',
+    calls[1].data.taskId === 'task1' &&
+      calls[1].data.rating === 'bad' &&
+      calls[1].data.reason === 'not_natural' &&
+      calls[1].data.comment === '太长了',
+    calls[1].data,
+  )
+  check('created=true 带出（新建）', fb1.created === true)
+
+  plan = [ok({ accepted: true, created: false, rating: 'good' })]
+  await api.sendFeedback({ taskId: 'task1', rating: 'good' })
+  check(
+    '满意时不发 reason / comment（后端 reason 是枚举校验，空串非法）',
+    calls[2].data.reason === undefined && calls[2].data.comment === undefined,
+    calls[2].data,
+  )
+  check('只带 taskId 与 rating', Object.keys(calls[2].data).sort().join(',') === 'rating,taskId')
+
+  plan = [ok({ accepted: true, created: true, rating: 'bad' })]
+  await api.sendFeedback({ taskId: 'task1', rating: 'bad', comment: 'x'.repeat(1200) })
+  check('comment 超过 1000 字会截断', calls[3].data.comment.length === 1000, calls[3].data.comment.length)
+
+  section('评价入口：只有服务端任务才给')
+  check('toModalRecord 带 taskId', modal.taskId === 'task1', modal.taskId)
+  check('服务端任务可评价', modal.canFeedback === true)
+  const localRec = store.addHistory({ text: '没有 taskId 的记录', llmText: '结果' })
+  check('本地补 id 的记录标了 localOnly', localRec.localOnly === true && localRec.id.charAt(0) === 'h')
+  check('本地记录不给评价入口', format.toModalRecord(localRec).canFeedback === false)
 
   section('待续跑任务')
   store.savePending({ taskId: 't9', at: 1, text: 'x' })

@@ -150,7 +150,6 @@
   margin-left: 12rpx;
   color: #c77e22;
 }
-
 .foot-hint {
   margin-top: 36rpx;
   text-align: center;

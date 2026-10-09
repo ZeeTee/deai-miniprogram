@@ -304,6 +304,43 @@ function getTask(taskId) {
 }
 
 /**
+ * GET /api/feedback/summary —— 取「不满意原因」的可选枚举
+ *
+ * 枚举不写死在前端：后端新增或下线某个原因时，前端不用跟着发版。
+ * 和 /api/skills 一样，后端返回 key，中文名由 format.js 的映射表补。
+ */
+function getFeedbackSummary() {
+  return request({ path: '/api/feedback/summary', method: 'GET', timeout: TIMEOUT_MAX })
+}
+
+/**
+ * POST /api/feedback —— 提交评价
+ *
+ * @param {object} payload { taskId, rating: 'good'|'bad', reason?, comment? }
+ * @returns {Promise<{accepted: boolean, created: boolean, rating: string}>}
+ *          created=false 表示覆盖了上次的评价（同一任务同一用户只留一条 = 改主意）
+ *
+ * 注意：reason / comment 为空时**不带这两个字段**。后端的 reason 是枚举校验，
+ * 空字符串不在枚举里，发过去反而会被判成非法值。
+ */
+function sendFeedback(payload) {
+  const p = payload || {}
+  const data = {
+    taskId: String(p.taskId || ''),
+    rating: p.rating || '',
+  }
+  if (p.reason) data.reason = String(p.reason)
+  if (p.comment) data.comment = String(p.comment).slice(0, 1000)
+
+  return request({
+    path: '/api/feedback',
+    method: 'POST',
+    data: data,
+    timeout: TIMEOUT_MAX,
+  })
+}
+
+/**
  * POST /api/auth/login —— 手机号授权。
  *
  * ⚠️ **它不再影响使用次数**（次数已统一成「按 openid 每天 N 次」），
@@ -452,6 +489,8 @@ module.exports = {
   getQuota: getQuota,
   createRewrite: createRewrite,
   getTask: getTask,
+  getFeedbackSummary: getFeedbackSummary,
+  sendFeedback: sendFeedback,
   login: login,
   pollTask: pollTask,
 }

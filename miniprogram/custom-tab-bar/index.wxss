@@ -1,0 +1,60 @@
+/* 自定义 tabBar：字号比原生大一圈（原生约 20rpx，这里 32rpx）。
+   选中态是一枚会滑动的胶囊 —— 滑动比「原地淡入淡出」顺手得多 */
+
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #ffffff;
+  border-top: 1rpx solid #eef2f0;
+}
+
+/* 内层单独一层：胶囊的定位只需要跟这 110rpx 打交道，不用去算底部安全区 */
+.tab-inner {
+  position: relative;
+  display: flex;
+  height: 110rpx;
+}
+
+/* 胶囊：两个 tab 等宽（各 375rpx），所以右移正好 375rpx。
+   以后加到三个 tab 时，这里要改成按 index 算 transform */
+.tab-pill {
+  position: absolute;
+  top: 50%;
+  left: 87.5rpx; /* 半个 tab 宽 - 半个胶囊宽 = 375/2 - 200/2 */
+  width: 200rpx;
+  height: 58rpx;
+  margin-top: -29rpx;
+  border-radius: 999rpx;
+  background: #e6f4ef;
+  transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.tab-pill-right {
+  transform: translateX(375rpx);
+}
+
+.tab-item {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 两个状态的字重必须一致：一改字重文字宽度就变，胶囊里会跟着抖一下 */
+.tab-label {
+  font-size: 32rpx;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #8a9490;
+  transition: color 0.2s ease;
+}
+
+.tab-label-on {
+  color: #14453d;
+}

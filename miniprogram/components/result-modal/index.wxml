@@ -18,8 +18,10 @@
       <text wx:if="{{record.isFallback}}" class="banner-text">下面是规则版结果，可以直接用，也可以再试一次。</text>
     </view>
 
-    <!-- 结果正文 -->
-    <scroll-view class="sheet-body" scroll-y>
+    <!-- 结果正文。
+         show-scrollbar 必须配合 enhanced 才生效（官方属性表），所以这里两个都写；
+         另外 wxss 里再用 ::-webkit-scrollbar 兜一道 webview 的原生滚动条 -->
+    <scroll-view class="sheet-body" scroll-y enhanced="{{true}}" show-scrollbar="{{false}}">
       <!-- 用 <text user-select> 而不是 <view>：只有 text 节点支持长按选中 -->
       <view wx:if="{{record.result}}" class="result-text">
         <text class="result-inner" user-select="{{true}}">{{record.result}}</text>
@@ -57,21 +59,68 @@
         </view>
       </view>
 
-      <!-- 用量：给在意成本的人看，普通用户不看也不影响 -->
-      <view wx:if="{{record.usage}}" class="usage">
-        <text>{{record.usage.totalTokens}} tokens</text>
-        <text wx:if="{{record.usage.cacheHitText}}"> · 缓存命中 {{record.usage.cacheHitText}}</text>
-        <text wx:if="{{record.usage.costText}}"> · {{record.usage.costText}}</text>
+      <!-- 复制动作：跟着正文一起滚。
+           不做成固定底栏，是因为底栏下面还要放可展开的反馈区（原因胶囊会换好几行），
+           两块固定区一起挤中间的 scroll-view 就会把内容顶出面板 -->
+      <view class="sheet-foot">
+        <view class="btn btn-primary grow" bindtap="onCopy" data-which="result">复制结果</view>
+        <view class="btn btn-ghost btn-side" bindtap="onCopy" data-which="source">复制原文</view>
+      </view>
+
+      <!-- 反馈：紧跟在「复制结果」下面 —— 先让用户把结果拿走，再问好不好用。
+           不满意原因的候选从后端 /api/feedback/summary 的 availableReasons 拉，不写死在前端 -->
+      <view wx:if="{{record.canFeedback}}" class="fb">
+        <view class="fb-head">
+          <text class="fb-q">这次改得怎么样？</text>
+          <text wx:if="{{fbSaved}}" class="fb-saved">已记录{{fbReasonText ? '：' + fbReasonText : ''}} · 可随时改</text>
+        </view>
+
+        <view class="fb-actions">
+          <view
+            class="fb-btn {{fbRating === 'good' ? 'fb-btn-on' : ''}}"
+            data-rating="good"
+            bindtap="onRate"
+          >👍 满意</view>
+          <view
+            class="fb-btn {{fbRating === 'bad' ? 'fb-btn-on fb-btn-bad' : ''}}"
+            data-rating="bad"
+            bindtap="onRate"
+          >👎 不满意</view>
+        </view>
+
+        <!-- 选了「不满意」才展开。原因和备注都是选填，不想说也能直接提交 -->
+        <view wx:if="{{fbRating === 'bad'}}" class="fb-panel">
+          <view wx:if="{{fbReasonOptions.length}}" class="fb-label">哪里不满意？（可只选一项，也可以直接提交）</view>
+          <view wx:if="{{fbReasonOptions.length}}" class="fb-chips">
+            <view
+              wx:for="{{fbReasonOptions}}"
+              wx:key="key"
+              class="fb-chip {{item.active ? 'fb-chip-on' : ''}}"
+              data-key="{{item.key}}"
+              bindtap="onPickReason"
+            >{{item.label}}</view>
+          </view>
+
+          <textarea
+            class="fb-input"
+            value="{{fbComment}}"
+            bindinput="onCommentInput"
+            maxlength="1000"
+            placeholder="补充说明（可不填，最多 1000 字）"
+            placeholder-class="fb-input-ph"
+            show-confirm-bar="{{false}}"
+            cursor-spacing="30"
+            adjust-position="{{true}}"
+          />
+
+          <view class="fb-submit {{fbSubmitting ? 'fb-submit-off' : ''}}" bindtap="onSubmitBad">
+            {{fbSubmitting ? '提交中…' : '提交'}}
+          </view>
+        </view>
       </view>
 
       <view class="sheet-bottom-space"></view>
     </scroll-view>
-
-    <!-- 底部动作 -->
-    <view class="sheet-foot">
-      <view class="btn btn-primary grow" bindtap="onCopy" data-which="result">复制结果</view>
-      <view class="btn btn-ghost btn-side" bindtap="onCopy" data-which="source">复制原文</view>
-    </view>
 
   </view>
 </view>

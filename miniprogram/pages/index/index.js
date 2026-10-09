@@ -60,6 +60,10 @@ Page({
   },
 
   onShow() {
+    // 自定义 tabBar 不会自己知道当前在哪一页，得手动同步选中态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 0 })
+    }
     if (!api.isConfigured()) return
     this.loadQuota()
     this.resumePending()
@@ -266,7 +270,7 @@ Page({
             onProgress: function () {},
           })
           .then(function (final) {
-            // 用轮询结果覆盖 status/llmText/usage，保留 first 里的 report/quota
+            // 用轮询结果覆盖 status/llmText，保留 first 里的 report/quota
             that.finish(Object.assign({}, first, final), text, opts)
           })
           .catch(function (err) {
@@ -357,7 +361,6 @@ Page({
       level: p.report && p.report.level ? p.report.level : 'low',
       totalHits: report.totalHits,
       charCount: report.charCount || format.countChars(sourceText),
-      usage: p.usage || null,
       error: p.error || '',
     }
 

@@ -31,7 +31,20 @@
         <text class="subtle item-time">{{item.timeText}}</text>
       </view>
 
-      <view class="item-summary">{{item.summary}}</view>
+      <!-- 原文 → 结果：各占一行，超长用省略号；中间那个 ↓ 就是「转换」的标志 -->
+      <view class="pair">
+        <view class="pair-row">
+          <text class="pair-tag">原文</text>
+          <text class="pair-text">{{item.summary}}</text>
+        </view>
+        <view class="pair-arrow">↓</view>
+        <view class="pair-row">
+          <text class="pair-tag pair-tag-out">结果</text>
+          <text
+            class="pair-text {{item.resultSummary ? 'pair-text-out' : 'pair-text-empty'}}"
+          >{{item.resultSummary || '点开查看改写结果'}}</text>
+        </view>
+      </view>
 
       <view class="item-foot subtle">
         <text>{{item.sceneText}}</text>

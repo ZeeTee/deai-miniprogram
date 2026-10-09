@@ -4,7 +4,7 @@
  * 为什么拆成「索引 + 明细」两个 key：
  *   小程序单个 storage key 上限是 1MB。一条记录含原文 + 规则版 + AI 版 + 体检报告，
  *   50 条塞进一个 key 必然超限，所以：
- *     - deai_history_index_v1     ：轻量索引（时间/分数/摘要），倒序，最多 50 条
+ *     - deai_history_index_v1     ：轻量索引（时间/分数/原文摘要/结果摘要），倒序，最多 50 条
  *     - deai_history_item_v1_<id> ：单条完整记录，一条一个 key
  *   淘汰最老的第 51 条时会把它的明细 key 一起删掉，不会越存越多。
  */
@@ -74,6 +74,9 @@ function toIndexItem(rec) {
     totalHits: rec.totalHits || 0,
     charCount: rec.charCount || 0,
     summary: rec.summary || summarize(rec.text),
+    // 列表要展示「原文 → 结果」，所以结果也得留一句话摘要。
+    // 优先 AI 版；AI 那次没跑成时退回规则版，列表上照样有东西看。
+    resultSummary: summarize(rec.llmText || rec.rulesText),
     hasLlm: !!rec.llmText,
   }
 }
@@ -115,6 +118,9 @@ function getHistoryItem(id) {
  */
 function addHistory(record) {
   const rec = Object.assign({}, record || {})
+  // 没有服务端 taskId 时只能补一个本地 id。这种记录没法参与服务端评价
+  //（评价接口按 taskId 认任务），所以标一下，弹窗里就不给它显示反馈入口。
+  rec.localOnly = !rec.id
   rec.id = rec.id || makeId()
   rec.createdAt = rec.createdAt || Date.now()
   rec.skill = rec.skill || 'humanizer'

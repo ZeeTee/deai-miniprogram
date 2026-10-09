@@ -40,7 +40,8 @@ SERVICE_NAME: 'deai-api',  // 云托管服务名
 ```
 project.config.json            开发者工具的项目配置（miniprogramRoot 指向下面）
 miniprogram/                   ← 小程序根目录（只有这里面的东西会被编译/上传）
-  app.js / app.json / app.wxss 小程序入口、两个 tab、全局样式
+  app.js / app.json / app.wxss 小程序入口、全局样式（tabBar 是自定义的，见下）
+  custom-tab-bar/              自定义 tabBar —— 原生 tabBar 的字号改不了
   config.js                    ★ 唯一需要改的文件
   utils/api.js                 云托管调用层（唯一出口，页面不直接碰 wx.cloud）
   utils/store.js               本地历史记录（索引 + 明细分离）+ 参数偏好
@@ -78,12 +79,14 @@ node scripts/selfcheck.js
 - **场景 / 强度选择器**：场景 4 个（通用 / 小红书 / 学术 / 公文），强度 3 档（轻度 / 中度 / 重度）
 - 点「开始去 AI 味」调用后端，结果显示在**底部弹窗**里，一键复制结果（也能复制原文）
 - 弹窗里可以展开看「AI 味体检」：分数、等级、命中的具体词句和修改建议
+- 弹窗里可以给这次改写打分（👍 满意 / 👎 不满意）；不满意时选一个原因、补一句说明，
+  提交后还能改主意（后端会覆盖上一条）
 - 次数用完时，页面会显示「明天 0 点恢复」，后端返回的错误文案也带了同样的说明
 
 **历史记录**
 
 - 每次改写自动存一条（原文 + 规则版 + AI 版 + 体检报告）
-- 点开看详情，长按删除单条，右上角清空
+- 列表每条显示「原文 → 结果」各一行（超长省略），点开看完整内容；长按删除单条，右上角清空
 - **只存在本机**，不上传服务端
 
 ## 依赖的后端接口
@@ -94,6 +97,8 @@ node scripts/selfcheck.js
 | GET | `/api/quota` | 今日剩余次数 + `resetsAt`（下次归零时刻） |
 | POST | `/api/rewrite` | 创建改写任务（混合模式：优先同步返回，超时转轮询） |
 | GET | `/api/task/<taskId>` | 轮询任务结果 |
+| GET | `/api/feedback/summary` | 取「不满意原因」的候选枚举（`availableReasons`），前端不写死 |
+| POST | `/api/feedback` | 提交评价：`taskId` + `rating`（good / bad），可选 `reason` + `comment` |
 
 > 另外两个接口**当前没有用到**：`/api/health`（部署探活，用浏览器或 curl 看就行）、
 > `/api/auth/login`（手机号授权，见下方说明）。
@@ -137,7 +142,8 @@ node scripts/selfcheck.js
 **为什么历史记录拆成「索引 + 明细」两个 storage key**
 
 小程序单个 storage key 上限 1MB。一条记录含原文 + 两版结果 + 体检报告，
-50 条塞一个 key 必然超限。所以索引只放时间/分数/摘要（列表页读它），明细一条一个 key，淘汰时一起删。
+50 条塞一个 key 必然超限。所以索引只放时间/分数/原文摘要/结果摘要（列表页靠它渲染
+「原文 → 结果」两行预览），明细一条一个 key，淘汰时一起删。
 
 **为什么界面上没有「登录 / 授权手机号」入口**
 
@@ -150,6 +156,39 @@ node scripts/selfcheck.js
 
 后端 `/api/auth/login` 仍然保留（它是整套体系里唯一「用户主动做过、且微信背书」的动作，
 以后做账号体系用得上），需要时可以把它接回来。
+
+**弹窗里的评价是怎么做的**
+
+- **原因枚举不写死**：「哪里不满意」的候选来自 `GET /api/feedback/summary` 的
+  `availableReasons`，前端只做 key → 中文名的翻译（`format.js` 的 `REASON_MAP`），
+  映射表里没有的 key 原样显示。后端新增或下线一个原因，前端不用发版。
+- **原因和备注都是选填**：点「不满意」只是展开面板，不逼着选原因，直接提交也允许。
+- **空字段不发**：`reason` 是枚举校验，空字符串会被判成非法值，所以只在该有值的时候带上。
+- **改主意**：同一任务同一用户只保留一条，重复提交走覆盖；后端用 `created: false` 告诉我们
+  这次是覆盖，前端提示「已更新你的评价」。
+- **拉不到候选也不挡评价**：`/api/feedback/summary` 挂了就只留「满意 / 不满意」两个按钮，
+  原因列表空着，照样能提交。
+- **只有服务端任务才给入口**：评价按 `taskId` 认任务，本地补过 id 的记录（`store.js` 里的
+  `localOnly`）后端认不出来，弹窗里就不显示这块。
+
+**为什么 tabBar 是自己画的**
+
+原生 tabBar 的文字大小是原生层写死的：app.json 里没有 fontSize 这类配置，WXSS 也选不到它
+（它不在 webview 的节点树里）。要把「去 AI 味 / 历史记录」的字放大，只能换成官方支持的
+**自定义 tabBar**（`app.json` 的 `tabBar.custom: true` + 根目录 `custom-tab-bar/` 组件）。
+
+换过去之后有两件事必须自己做，漏一个就出问题：
+
+1. **选中态要手动同步**：自定义 tabBar 不知道当前在哪一页，所以两个 tab 页都在 `onShow` 里
+   `this.getTabBar().setData({ selected: N })`。
+2. **底部要自己留白**：原生 tabBar 会占掉一块窗口高度，自定义的不会（它是 `position: fixed`
+   浮在最上层），所以全局 `.page-body` 的底部内边距里补了 tabBar 高度 + 安全区。
+
+选中态是一枚**会滑动的胶囊**（`transform` + `cubic-bezier`），不是原地换色。点击时先
+`setData({ selected })` 再 `wx.switchTab`：滑动立刻开始，不用等新页面的 `onShow` 回来，
+否则点完会先愣一下才动。两个状态的字重特意保持一致——改字重会让文字宽度变化，胶囊里会抖。
+
+`app.json` 里那份 `list` 仍然保留：`custom: true` 时它作为低版本基础库的兜底。
 
 ## 常见报错对照
 

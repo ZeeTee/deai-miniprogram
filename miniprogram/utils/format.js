@@ -28,6 +28,20 @@ const INTENSITY_MAP = {
   heavy: '重度',
 }
 
+// 「不满意原因」的中文名。key 由后端 /api/feedback/summary 的 availableReasons 给，
+// 这里只负责翻译；映射表里没有的 key 会原样显示，不会渲染成空白。
+const REASON_MAP = {
+  added_facts: '加了原文没有的内容',
+  lost_info: '丢了原文的信息',
+  not_natural: '还是很像 AI',
+  changed_meaning: '意思被改了',
+  too_casual: '改得太随意/口语',
+  too_formal: '改得太正式',
+  too_long: '变啰嗦了',
+  too_short: '变短了',
+  other: '其他',
+}
+
 /** 字数：按用户直觉数「字」，emoji 之类的代理对算一个 */
 function countChars(text) {
   const s = String(text || '')
@@ -95,14 +109,6 @@ function scoreVerdict(score) {
   return '没检出明显的 AI 痕迹'
 }
 
-/** 金额：后端给的是元，很小的时候要保留 4 位才看得出差别 */
-function formatCost(cny) {
-  const n = Number(cny) || 0
-  if (n <= 0) return ''
-  if (n < 0.01) return '¥' + n.toFixed(4)
-  return '¥' + n.toFixed(2)
-}
-
 /**
  * 把后端 report 加工成弹窗直接可用的形状。
  * 后端字段：score / level / totalHits / charCount / categories[] / hits[] / verdict / advice[]
@@ -159,29 +165,16 @@ function toModalRecord(rec) {
 
   return {
     title: llm ? '改写结果' : r.error ? '规则版结果' : '改写结果',
+    // 评价接口按 taskId 认任务；本地补过 id 的记录没有服务端任务，就不给它评价入口
+    taskId: r.id || '',
+    canFeedback: !!r.id && !r.localOnly,
     source: r.text || '',
     result: result,
     // 没拿到 AI 版但规则版有内容 = 兜底结果，要在弹窗里说清楚
     isFallback: !llm && !!r.rulesText,
     error: r.error || '',
     report: hasReport ? decorateReport(r.report) : null,
-    usage: toUsageView(r.usage),
     meta: metaParts.join(' · '),
-  }
-}
-
-/** 用量 → 弹窗里那行小字 */
-function toUsageView(usage) {
-  const u = usage && typeof usage === 'object' ? usage : null
-  if (!u) return null
-  const total = Number(u.totalTokens) || 0
-  if (!total) return null
-
-  const rate = Number(u.cacheHitRate) || 0
-  return {
-    totalTokens: total,
-    cacheHitText: rate > 0 ? Math.round(rate * 100) + '%' : '',
-    costText: formatCost(u.costCNY),
   }
 }
 
@@ -204,6 +197,16 @@ function buildIntensityOptions(keys, current) {
   return buildOptions(keys, INTENSITY_MAP, current)
 }
 
+/** 不满意原因的中文名（未知 key 原样返回，和场景一样不留空白） */
+function reasonText(reason) {
+  return REASON_MAP[reason] || reason || ''
+}
+
+/** 不满意原因的候选（key 来自后端 /api/feedback/summary 的 availableReasons） */
+function buildReasonOptions(keys, current) {
+  return buildOptions(keys, REASON_MAP, current)
+}
+
 /** 只在候选列表里挑，挑不到就用兜底值（防止本地存了个后端已下线的场景） */
 function pick(value, keys, fallback) {
   const list = Array.isArray(keys) ? keys : []
@@ -215,7 +218,6 @@ function pick(value, keys, fallback) {
 module.exports = {
   countChars: countChars,
   formatTime: formatTime,
-  formatCost: formatCost,
   levelInfo: levelInfo,
   severityInfo: severityInfo,
   sceneText: sceneText,
@@ -225,5 +227,7 @@ module.exports = {
   toModalRecord: toModalRecord,
   buildSceneOptions: buildSceneOptions,
   buildIntensityOptions: buildIntensityOptions,
+  reasonText: reasonText,
+  buildReasonOptions: buildReasonOptions,
   pick: pick,
 }

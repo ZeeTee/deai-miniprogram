@@ -16,7 +16,9 @@ page {
 /* ---------- 布局 ---------- */
 
 .page-body {
-  padding: 24rpx 24rpx 48rpx;
+  /* 底部要给自定义 tabBar 留位置：它不像原生 tabBar 那样占位，而是 fixed 浮在最上层。
+     110rpx = tabBar 自身高度，再加一层底部安全区 */
+  padding: 24rpx 24rpx calc(48rpx + 110rpx + env(safe-area-inset-bottom));
 }
 
 .card {
